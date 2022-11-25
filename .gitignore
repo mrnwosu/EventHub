@@ -1,4 +1,4 @@
-*.json
+/scripts/**/*.json
 *.csv
 /scripts/venv
 
