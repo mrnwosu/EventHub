@@ -4,3 +4,5 @@
 /scripts/venv
 /api/node_modules
 /**/*cache*
+/api/node_modules
+/api/dist
