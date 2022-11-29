@@ -8,6 +8,10 @@ from bs4 import BeautifulSoup
 class GetEventsLiveNationSpider(scrapy.Spider):
     name = 'get_events_live_nation'
     allowed_domains = ['www.livenation.com']
+    custom_settings = {
+        'airtable_table':'Events',
+        'match': ["title", "date"]
+    }
 
     def start_requests(self):
         file = open('../../data/venues-urls.json')
