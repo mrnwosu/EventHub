@@ -53,11 +53,25 @@ class AirtableEventsPipeline:
         records_in_db = self.air_service.get_records_by_match(match_dict)
         return records_in_db is not None and len(records_in_db) > 0
         
+    def setVenueRecordId(self, item):
+        self.air_service.set_table('Venues')
+        venues = self.air_service.get_records_by_match({'name':item['venue']})
+        if len(venues) is 0:
+            item['venue'] = None
+        else:
+            venueRecordId = venues[0].id
+            item['venue'] = venueRecordId
+        self.air_service.set_table('Events')
+
     def process_item(self, item, spider):
         dictItem = ItemAdapter(item).asdict()
         self.air_service.set_table(self.tableName)
         
-        if not self.existsOnDb(dictItem):
-            self.air_service.create_record(item)
+        if self.existsOnDb(dictItem):
+            DropItem(f"Event already exists on DB: {dictItem}")
+        
+        if self.tableName is "Events":
+            self.setVenueRecordId(dictItem)
+                
+        self.air_service.create_record(dictItem)
             
-        return item
