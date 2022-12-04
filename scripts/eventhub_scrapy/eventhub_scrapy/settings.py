@@ -1,3 +1,5 @@
+import os
+
 # Scrapy settings for eventhub_scrapy project
 #
 # For simplicity, this file contains only settings considered important or
@@ -96,3 +98,12 @@ DOWNLOAD_HANDLERS = {
     "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
 }
+
+AIRTABLE_API_KEY=os.environ.get('AIRTABLE_API_KEY',None)
+AIRTABLE_BASE_ID=os.environ.get('AIRTABLE_BASE_ID',None)
+
+if AIRTABLE_API_KEY is None or AIRTABLE_API_KEY == "":    
+    raise ValueError('Must have AIRTABLE_API_KEY env variable')
+
+if AIRTABLE_BASE_ID is None or AIRTABLE_API_KEY == "":    
+    raise ValueError('Must have AIRTABLE_BASE_ID env variable')

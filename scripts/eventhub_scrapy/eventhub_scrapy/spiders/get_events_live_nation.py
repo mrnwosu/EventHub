@@ -1,6 +1,7 @@
 import scrapy
 import json
 import time
+import os
 from eventhub_scrapy.items import EventItem
 from scrapy_playwright.page import PageMethod
 
@@ -11,9 +12,9 @@ class GetEventsLiveNationSpider(scrapy.Spider):
     name = 'get_events_live_nation'
     allowed_domains = ['www.livenation.com']
     custom_settings = {
-        'airtable_table':'Events',
-        'match': ["title", "date"]
-    }
+            'airtable_table':'Events',
+            'match': ["title", "date"],
+        }
 
     def start_requests(self):
         file = open('../../data/venues-urls.json')

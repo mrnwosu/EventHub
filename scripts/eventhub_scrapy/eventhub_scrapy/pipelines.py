@@ -30,19 +30,18 @@ class AirtableEventsPipeline:
     def getEnvirOrDefault(self, key, default):
         return os.environ.get(key) if os.environ.get(key) else default
 
-    def __init__(self, tableName, match):
-        api_key = self.getEnvirOrDefault('AIRTABLE_API_KEY', "")
-        base_id = self.getEnvirOrDefault('AIRTABLE_BASE_ID', "")
-        self.air_service = AirtableService(api_key,base_id)
-
+    def __init__(self, tableName, match, api_key, base_id):
         self.tableName = tableName
         self.match = match
+        self.air_service = AirtableService(api_key, base_id)
 
     @classmethod
     def from_crawler(cls, crawler):
         return cls(
             tableName=crawler.settings.get('airtable_table'),
-            match=crawler.settings.get('match')
+            match=crawler.settings.get('match'),
+            api_key=crawler.settings.get('AIRTABLE_API_KEY'),
+            base_id=crawler.settings.get('AIRTABLE_BASE_ID'),
         )
 
     def existsOnDb(self,item):   
@@ -56,7 +55,7 @@ class AirtableEventsPipeline:
     def setVenueRecordId(self, item):
         self.air_service.set_table('Venues')
         venues = self.air_service.get_records_by_match({'name':item['venue']})
-        if len(venues) is 0:
+        if len(venues) == 0:
             item['venue'] = None
         else:
             venueRecordId = venues[0].id
@@ -64,14 +63,20 @@ class AirtableEventsPipeline:
         self.air_service.set_table('Events')
 
     def process_item(self, item, spider):
+        print(f'Inside {self.tableName}')
+        print(f'Inside {self.match}')
+        print(f'Inside {spider.settings.get("AIRTABLE_API_KEY")}')
+
         dictItem = ItemAdapter(item).asdict()
         self.air_service.set_table(self.tableName)
         
         if self.existsOnDb(dictItem):
             DropItem(f"Event already exists on DB: {dictItem}")
         
-        if self.tableName is "Events":
+        if self.tableName == "Events":
             self.setVenueRecordId(dictItem)
                 
         self.air_service.create_record(dictItem)
+
+        return item
             

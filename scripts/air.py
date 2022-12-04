@@ -8,6 +8,9 @@ class AirtableService:
     
 
     def set_table(self, table_name: str) -> Table: 
+        print("Setting Table Here")
+        print(f'API KEY => {self.api_key}')
+        print(f'BASE ID => {self.base_id}')
         self.table = Table(self.api_key, self.base_id, table_name)
 
     # Gets 
