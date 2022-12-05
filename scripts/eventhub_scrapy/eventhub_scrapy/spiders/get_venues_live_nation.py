@@ -3,6 +3,8 @@ import json
 import time
 import asyncio
 import os
+from scrapy_playwright import Page, PageMethod
+
 
 from bs4 import BeautifulSoup
 
@@ -18,43 +20,37 @@ class GetVenuesLiveNationSpider(scrapy.Spider):
     def start_requests(self):
         meta={
             'playwright': True,
-            'playwright_include_page': True}
+            'playwright_include_page': True,
+            'playwright_page_methods'={
+                PageMethod("click", '.show-more'),
+                PageMethod("click", '.show-more'),
+                PageMethod("click", '.show-more'),
+                PageMethod("click", '.show-more'),
+                PageMethod("click", '.show-more'),
+                PageMethod("click", '.show-more'),
+            }
 
         yield scrapy.Request('https://www.livenation.com/venues', meta=meta, errback=self.errback)
         
     
-    async def clickLoadMores(self,page):
-        while(True):
-            try:
-                print('Clicking Pagination')
-                await page.locator('.pagination > a').click({timeout:5})
-                await page.waitFor(5000)
-            except:
-                break
-        return True
-
     async def parse(self, response):
         page = response.meta['playwright_page']
+        soup = BeautifulSoup(await page.content(), 'html.parser')
+        detail_cards = soup.select('.common-detail-card')
 
-        finished = await self.clickLoadMores(page)
-        
-        if finished is True:
-            soup = BeautifulSoup(await page.content(), 'html.parser')
-            detail_cards = soup.select('.common-detail-card')
+        for card in detail_cards:
+            city_state = card.select_one('p').get_text()
+            name = card.select_one('h3.legacy').get_text()
+            image_url = card.select_one('img')['src']
+            venue_url = card.select_one('nav a')['href']
 
-            for card in detail_cards:
-                city_state = card.select_one('p').get_text()
-                name = card.select_one('h3.legacy').get_text()
-                image_url = card.select_one('img')['src']
-                venue_url = card.select_one('nav a')['href']
-
-                yield {
-                    'city': city_state.split(', ')[0],
-                    'state': city_state.split(', ')[1],
-                    'name': name,
-                    'image_url': None,
-                    'venue_url': f'https://livenation.com{venue_url}',
-                }
+            yield {
+                'city': city_state.split(', ')[0],
+                'state': city_state.split(', ')[1],
+                'name': name,
+                'image_url': None,
+                'venue_url': f'https://livenation.com{venue_url}',
+            }
 
         
 
