@@ -10,14 +10,9 @@ from bs4 import BeautifulSoup
 class GetVenuesLiveNationSpider(scrapy.Spider):
     name = 'get_venues_live_nation'
     allowed_domains = ['www.livenation.com']
-
-    def __init__(self, category=None, *args, **kwargs):
-        super(GetVenuesLiveNationSpider, self).__init__(*args, **kwargs)
-        self.custom_settings = {
+    custom_settings = {
             'airtable_table':'Venues',
             'match': ['name'],
-            'api_key': os.environ.get('AIRTABLE_API_KEY'),
-            'base_id': os.environ.get('AIRTABLE_BASE_ID'),
         }
 
     def start_requests(self):
@@ -57,8 +52,7 @@ class GetVenuesLiveNationSpider(scrapy.Spider):
                     'city': city_state.split(', ')[0],
                     'state': city_state.split(', ')[1],
                     'name': name,
-                    'image_url': "",
-                    # 'image_url': image_url,
+                    'image_url': None,
                     'venue_url': f'https://livenation.com{venue_url}',
                 }
 

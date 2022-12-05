@@ -21,15 +21,13 @@ class GetEventsLiveNationSpider(scrapy.Spider):
         content = file.read()
         urls = json.loads(content)
 
-        filmore_urls = list(filter(lambda u: "fillmore" in u, urls))
-
-        for url in filmore_urls:
+        for url in urls:
             yield scrapy.Request(url,
                 meta={
                     'playwright': True,
                     'playwright_include_page': True,
                     'playwright_page_methods': [
-                        PageMethod("wait_for_selector", ".listing__item")
+                        PageMethod("wait_for_selector", ".listing__item"),
                     ]},
                     errback=self.errback,)
         
@@ -39,6 +37,7 @@ class GetEventsLiveNationSpider(scrapy.Spider):
         
         pageHtml = await page.content()
         soup = BeautifulSoup(pageHtml, "html.parser")
+        await page.close()
         venue_name = soup.select_one('.venue-title').get_text()
         for eventSoup in soup.select('.listing__item'):
             e = item = EventItem()
