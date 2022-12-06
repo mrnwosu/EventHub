@@ -2,41 +2,46 @@
 import os
 import json
 from air import AirtableService
-import datetime
 
 
-def getEnvirOrDefault(key, default):
-    return os.environ.get(key) if os.environ.get(key) else default
+def getEnvirOrDefault(key):
+    value = os.environ.get(key) 
+    if value is None or len(value) == 0:
+        raise Exception(f'No env variable set for {key}')
 
-api_key = getEnvirOrDefault('AIRTABLE_API_KEY', "")
-base_id = getEnvirOrDefault('AIRTABLE_BASE_ID', "apprHd6ejEpRJBUkt")
-table_id = getEnvirOrDefault('AIRTABLE_BASE_NAME', "LiveNation")
+    return value
+    
 
+api_key = getEnvirOrDefault('AIRTABLE_API_KEY')
+base_id = getEnvirOrDefault('AIRTABLE_BASE_ID')
+table_id = 'tblGRJpr3dfyQQFU3'
 air_service = AirtableService(api_key,base_id)
-air_service.set_table(table_id)
+
+
 
 # %%
-jsonData = open('../data/output.json').read()
-event_list = json.loads(jsonData)
-event_list[0].keys()
+air_service.get_all_records('Venues')
+
+
 # %%
 
-def createEvent(event: dict):
-    try:
-        if not air_service.get_records_by_match({'title': event['title'], 'date': event['date']}):
-            air_service.create_record(event)
+def checkIfExistsOnDb(table: str, match: dict):
+    result = air_service.get_records_by_match(table, match)
+    return result is not None and len(result) > 0
 
-    except Exception as e:
-        print(f'ERROR - Unable to create event {e}: {event}')
+# %%
 
-for event in event_list:
-    createEvent({
-        'title':event['artist'],
-        'genre':event['genre'],
-        'date':event['date'],
-        'ticket_url':event['ticket_url'],
-        'image_url':event['image_url'],
-        'venue_name':event['venue_name'],
-        'location':event['location']
-    })
+json_text = open('../data/venue_cheat_code.json').read()
+# %%
+
+venueList = json.loads(json_text)
+
+# %%
+
+for venue in venueList:
+    if not checkIfExistsOnDb("Venues", {'name': venue['name']}):
+        print(f"Creating record for {venue}")
+        air_service.create_record("Venues", venue)
+    else:   
+        print(f'Record already exists on db {venue["name"]}')
 # %%

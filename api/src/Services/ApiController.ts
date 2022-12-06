@@ -10,23 +10,41 @@ export default class ApiController {
         this._eventHubService = new EventHubService()
     }
 
-    startApi(){
+    run(){
         const app = express()
-        app.get('/venues', (req, res) => {
-            res.send(`This is ${req.path}`)
+
+        // Venues
+        app.get('/venues/:venueId', async (req, res)=>{
+            const result = await this._eventHubService.getVenue(req.params.venueId)           
+            res.json(result)
+        })
+
+        app.get('/venues', async (req, res) => {
+            try {
+                const filter = req.query.filter ?  JSON.parse( req.query.filter as string) : null
+                const result = await this._eventHubService.getFilteredVenues(filter)
+                res.json(result)
+                
+            } catch (error) {
+                res.send(`FAIL ${error}`)//Make Bad Request Object
+            }
         })
         
+
+        //Events
         app.get('/events', async (req, res) => {
-            console.log('Events request recieved')
-            var result = await this._eventHubService.getEventByRecord('rechfEeK6kcd9Eqdq')
-            console.log(result)
-            
-            res.send(`This is ${req.path} ${JSON.stringify(result)}`)
+            try {
+                const filter = req.query.filter ?  JSON.parse( req.query.filter as string) : null
+                const result = await this._eventHubService.getFilteredEvents(filter)
+                res.json(result)
+            } catch (error) {
+                res.send(`FAIL ${error}`)
+            }
         })
-        
-        app.get('/events/{recordId}', async (req, res) => {
-            var result = await this._eventHubService.getEventByRecord(req.query['recordId'])
-            res.send(`This is ${req.path} ${result}`)
+
+        app.get('/event/:eventId', async (req, res)=>{
+            const result = await this._eventHubService.getEvent(req.params.eventId)           
+            res.json(result)
         })
         
         app.listen(this._port,()=>{

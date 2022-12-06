@@ -4,5 +4,4 @@ import ApiController from './Services/ApiController'
 const port = 8000
 
 const controller = new ApiController(port)
-controller.startApi()
-
+controller.run()

@@ -3,6 +3,7 @@ import { FieldSet } from 'airtable/lib/field_set';
 import { QueryParams } from 'airtable/lib/query_params';
 
 
+
 export default class AirtableService{
     _base: airtable.Base;
 
@@ -11,30 +12,38 @@ export default class AirtableService{
     }
 
     async getRecordById(table, recordId){
-        console.log(`Getting record ${recordId}`)
-        console.log(`Getting from table ${table}`)
         return await this._base(table).find(recordId)
     }
 
-    getRecordsList(tableName, take ){
+    async getRecordsByFields(table: string, fields:{}, pageSize: number = 20, pageNumber = 1){
+        const options: QueryParams<FieldSet> = {}
+        if (fields){
+            options.filterByFormula = this.filterByFormulaBuilder(fields)
+        } 
+
+        options.pageSize = pageSize
+        options.offset = pageNumber * pageSize
+
+        const result = await this._base(table).select(options).all()
+        return result
     }
 
-    async getRecordsByFields(table: string, fields:{}){
-        return await this._base(table).select().all(fields)
-    }
-
-    filterByFormulaBuilder(match:{}){
+    filterByFormulaBuilder(fields:{}){
         let formula = ""
-        let keys = Object.keys(match)
-        let values = Object.values(match)
+        let keys = Object.keys(fields)
+        let values = Object.values(fields)
         if(keys.length == 0) return
 
         keys.forEach((key, i)=>{
             if(formula.length > 0){
                 formula += ', '
             }
-            formula += `{key} = "${values[i]}` 
+            formula += `{${key}} = "${values[i]}"` 
         })
-        return `AND (${formula})`
+        if(keys.length > 1){
+            formula = `AND (${formula})`
+        }        
+        
+        return formula
     }
 }
