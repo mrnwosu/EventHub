@@ -107,3 +107,5 @@ if AIRTABLE_API_KEY is None or AIRTABLE_API_KEY == "":
 
 if AIRTABLE_BASE_ID is None or AIRTABLE_BASE_ID == "":    
     raise ValueError('Must have AIRTABLE_BASE_ID env variable')
+
+PLAYWRIGHT_ABORT_REQUEST = "eventhub_scrapy.utils.should_abort_request"
