@@ -3,7 +3,7 @@ import json
 import time
 import asyncio
 import os
-from scrapy_playwright import Page, PageMethod
+from scrapy_playwright.page import PageMethod
 
 
 from bs4 import BeautifulSoup
@@ -21,21 +21,17 @@ class GetVenuesLiveNationSpider(scrapy.Spider):
         meta={
             'playwright': True,
             'playwright_include_page': True,
-            'playwright_page_methods'={
-                PageMethod("click", '.show-more'),
-                PageMethod("click", '.show-more'),
-                PageMethod("click", '.show-more'),
-                PageMethod("click", '.show-more'),
-                PageMethod("click", '.show-more'),
-                PageMethod("click", '.show-more'),
-            }
+            'playwright_page_methods': [
+                PageMethod("click", selector='.show-more'),
+            ]}
 
-        yield scrapy.Request('https://www.livenation.com/venues', meta=meta, errback=self.errback)
+        yield scrapy.Request('https://wxww.livenation.com/venues', meta=meta, errback=self.errback)
         
     
     async def parse(self, response):
         page = response.meta['playwright_page']
         soup = BeautifulSoup(await page.content(), 'html.parser')
+        await page.close()
         detail_cards = soup.select('.common-detail-card')
 
         for card in detail_cards:
