@@ -22,9 +22,9 @@ export default class AirtableService{
         } 
 
         options.pageSize = pageSize
-        options.offset = pageNumber * pageSize
+        options.offset = (pageNumber-1) * pageSize 
 
-        const result = await this._base(table).select(options).all()
+        const result = await this._base(table).select(options).firstPage()
         return result
     }
 
