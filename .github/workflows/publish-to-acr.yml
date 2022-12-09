@@ -33,5 +33,5 @@ jobs:
         context: ./api/.
         file: api/Dockerfile
         # List of tags
-        tags: ${{secrets.ACR_RESGISTRY}}/${{env.IMAGE_NAME}}
+        tags: ${{secrets.ACR_REGISTRY}}/${{env.IMAGE_NAME}}
 
