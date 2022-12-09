@@ -21,7 +21,7 @@ jobs:
       with:
         username: ${{secrets.ACR_USERNAME}}
         password: ${{secrets.ACR_PASSWORD}}
-        registry: ${{secrets.ACR_RESGISTRY}}
+        registry: ${{secrets.ACR_REGISTRY}}
     - name: Build and push Docker images
       uses: docker/build-push-action@v3.2.0
       with:
