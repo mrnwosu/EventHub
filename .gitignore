@@ -6,3 +6,7 @@
 /**/*cache*
 /api/node_modules
 /api/dist
+/api/deployment
+/.*
+.*
+*.yml
