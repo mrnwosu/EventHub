@@ -27,7 +27,7 @@ jobs:
     - name: Build and push Docker images
       uses: docker/build-push-action@v3.2.0
       with:
-        build-contexts: api/.
+        build-contexts: ./api/.
         file: api/Dockerfile
         # List of tags
         tags: ${{secrets.ACR_RESGISTRY}}/${{env.IMAGE_NAME}}
