@@ -1,0 +1,60 @@
+name: Trigger auto deployment for eventhubapifirss
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - 'api/**'
+    - '.github/workflows/eventhubapifirss-AutoDeployTrigger-65e8d976-3dea-442d-a590-9f6e41d6474d.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:      
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to container registry
+        uses: docker/login-action@v1
+        with:
+          registry: eventhubreg.azurecr.io
+          username: ${{ secrets.EVENTHUBAPIFIRSS_REGISTRY_USERNAME }}
+          password: ${{ secrets.EVENTHUBAPIFIRSS_REGISTRY_PASSWORD }}
+
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: eventhubreg.azurecr.io/eventhubapifirss:${{ github.sha }}
+          file: ./api/Dockerfile
+          context: ./api/
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.EVENTHUBAPIFIRSS_AZURE_CREDENTIALS }}
+
+
+      - name: Deploy to containerapp
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az containerapp registry set -n eventhubapifirss -g Event_hub --server eventhubreg.azurecr.io --username  ${{ secrets.EVENTHUBAPIFIRSS_REGISTRY_USERNAME }} --password ${{ secrets.EVENTHUBAPIFIRSS_REGISTRY_PASSWORD }}
+            az containerapp update -n eventhubapifirss -g Event_hub --image eventhubreg.azurecr.io/eventhubapifirss:${{ github.sha }}
