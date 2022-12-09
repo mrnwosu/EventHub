@@ -43,7 +43,6 @@ export default class AirtableService{
         if(keys.length > 1){
             formula = `AND (${formula})`
         }        
-        
         return formula
     }
 }
