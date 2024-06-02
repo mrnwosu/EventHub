@@ -5,19 +5,23 @@ import { dumpObjectToFile } from "./utils/utils";
 
 async function execute(){
 
-    var eventData = await VenueService.getEventDataForVenue("silver-spring");
+    var eventData = await VenueService.GetEventDataForVenue("gorge-amphitheatre-events");
 
     eventData = _.sortBy(eventData, (event) => {
         return event.startDate;
     },);
-    
-    dumpObjectToFile("event-data-for-silver-spring", {
-        data: eventData, 
-        count: eventData.length,
-        names: eventData.map((event) => event.name),
-        dates: eventData.map((event) => event.startDate)
-    });
 
+    var searchResult = VenueService.SearchVenueByName("fillmore");
+
+    console.log(searchResult);
+    
+    // dumpObjectToFile("gorge-amphitheatre-events", {
+    //     data: eventData, 
+    //     count: eventData.length,
+    //     names: eventData.map((event) => event.name),
+    //     dates: eventData.map((event) => event.startDate)
+    //     se
+    // });
 }
 
 execute().then(() => {

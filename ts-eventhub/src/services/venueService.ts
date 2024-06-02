@@ -1,33 +1,66 @@
-import * as venues from "../../../data/venues-urls.json";
+import * as venueData from "../../../data/venue-data.json";
 import _ from "lodash";
 import { MusicEvent } from "../models/musicEventModels";
 import cheerio from "cheerio";
 import axios from "axios";
+import { VenueData } from "../models/venueData";
 
 export class VenueService{
     public static getVenueUrl(filter: string){
-        return _.first(_.filter(venues, (venue) => { 
-            return venue.includes(filter); 
+        return _.first(_.filter(venueData, (venue: VenueData) => { 
+            if(venue.url){
+                return venue.url.includes(filter); 
+            }
         }));  
     }
 
-    public static getAllVenueUrls(){
-        return venues; 
+    public static getAllVenues(): VenueData[]{
+        return venueData; 
     }
 
-    public static async getEventDataForVenue(filter: string){
+    public static GetVenueDataById(id: string){
+        return _.first(_.filter(venueData, (venue: VenueData) => { 
+            if(venue.id){
+                if(venue.id){
+                    return venue.id === id; 
+                }
+            }
+        }));  
+    }
 
-        if(!filter){
-            throw new Error("Venue filter is required");
-        }
+    public static GetVenueDataByName(name: string){
+        return _.first(_.filter(venueData, (venue: VenueData) => { 
+            if(venue.name){
+                return venue.name.toLowerCase().includes(name.toLowerCase()); 
+            }
+        }));
+    }
 
-        const venueUrl = this.getVenueUrl(filter);
+    public static GetVenueDataByZipcode(name: string){
+        return _.first(_.filter(venueData, (venue: VenueData) => { 
+            if(venue.zipcode){
+                return venue.zipcode === name; 
+            }
+        }));
+    }
 
-        if(!venueUrl){
-            throw new Error("No venue found for filter");
-        }
+    public static GetEventDataForVenueById(venueId: string){
+        const venueData = this.GetVenueDataById(venueId);
+        return this.GetEventDataForVenue(venueData);
+    }
 
-        const response = await axios.get(venueUrl);
+    public static GetEventDataForVenueByName(venueName: string){
+        const venueData = this.GetVenueDataByName(venueName);
+        return this.GetEventDataForVenue(venueData);
+    }
+
+    public static GetEventDataForVenueByZipcode(zipcode: string){
+        const venueData = this.GetVenueDataByZipcode(zipcode);
+        return this.GetEventDataForVenue(venueData);
+    }
+s
+    public static async GetEventDataForVenue(venueData: VenueData){
+        const response = await axios.get(venueData.url);
         const $ = cheerio.load(response.data);
         
         let eventList: MusicEvent[] = [];
@@ -41,4 +74,13 @@ export class VenueService{
 
         return eventList;
     }
+
+    public static SearchVenueByName(name: string){
+        return _.filter(venueData, (venue: VenueData) => {
+            if(venue.name){
+                return venue.name.toLowerCase().includes(name.toLowerCase());
+            }
+        });
+    }
+
 }
