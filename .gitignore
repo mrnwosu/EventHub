@@ -10,3 +10,5 @@
 /.*
 .*
 *.yml
+
+node_modules
