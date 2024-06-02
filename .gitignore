@@ -10,3 +10,6 @@
 /.*
 .*
 *.yml
+
+node_modules
+dump
