@@ -1,59 +1,93 @@
-import axios from "axios";
-import * as venues from "../../data/venues-urls.json";
 import _ from "lodash";
-import fs from "fs";
-import cheerio from "cheerio";
+import { VenueService } from "./services/venueService";
+import {
+  confirmPrompt,
+  inputPrompt,
+  selectPrompt,
+  writeError,
+  writeInfo,
+} from "./utils/utils";
+import { VenueData } from "./models/venueData";
+import { RunSignature } from "./models/RunSignature";
 
+async function execute() {
+  let signature = new RunSignature();
 
+  const searchResponse = await selectPrompt(
+    "How would you like to select your Venue",
+    [
+      { name: "Search by name", value: "searchByName" },
+      { name: "Search by zipcode", value: "searchByZipcode" },
+    ]
+  );
 
-async function execute(){
+  signature.searchByName = searchResponse === "searchByName";
+  signature.searchByZipcode = searchResponse === "searchByZipcode";
 
-    const fillmoreURl = await getVenueUrl();
-    var response = await axios.get(fillmoreURl);
+  const searchPrompt = signature.searchByName
+    ? "Enter the name of the venue"
+    : "Enter the zipcode of the venue";
+  signature.venueSearchTerm = await inputPrompt(searchPrompt);
 
-    dumpContentToFile("filemoreData.html", response.data);
-    const $ = cheerio.load(response.data);
+  let venueResults: VenueData[] = [];
 
-    let eventList = [];
+  if (signature.searchByName) {
+    venueResults.push(
+      ...VenueService.GetVenuesDataByName(signature.venueSearchTerm)
+    );
+    console.log(venueResults);
+  } else {
+    venueResults.push(
+      ...VenueService.GetVenuesDataByZipcode(signature.venueSearchTerm)
+    );
+    console.log(venueResults);
+  }
 
-    $('script[type="application/ld+json"]').each((index, element) => {
-        const json = JSON.parse($(element).html());
-        if(json['@type'] === "MusicEvent"){
-            eventList.push(json);
-        }
-    });
+  const selectedVenue = await selectPrompt(
+    "Select a venue",
+    venueResults.map((venue: VenueData) => {
+      return { name: venue.name, value: venue.id };
+    })
+  );
 
-    dumpContentToFile("filemoreEvents.json", JSON.stringify(eventList, null, 2));
-    dumpContentToFile("filemoreEventNames", JSON.stringify(eventList.map(s => s.name), null, 2));
+  signature.selectedVenue = VenueService.GetVenueDataById(selectedVenue);
+  writeInfo(`Selected venue: ${JSON.stringify(signature.selectedVenue)}`);
+
+  const collectEventResponse = await selectPrompt(
+    "How would you like to collect events for this venue?",
+    [
+      { name: "Collect all events", value: "collectAllEvents" },
+      { name: "Collect events by name", value: "collectEventsByName" },
+    ]
+  );
+
+  signature.collectAllEvents = collectEventResponse === "collectAllEvents";
+  signature.collectEventsByName =
+    collectEventResponse === "collectEventsByName";
+
+  if (signature.collectEventsByName) {
+    signature.eventSearchTerm = await inputPrompt(
+      "Enter the name of the event"
+    );  
+  }
+
+  const events = signature.collectAllEvents
+    ? await VenueService.GetAllEventDataForVenue(signature.selectedVenue)
+    : await VenueService.GetEventDataForVenueByName(
+        signature.selectedVenue.name
+      );
+
+  writeInfo(`Collected ${events ? events.length : 0} events`);
+  if (!events) {
+    writeError("No events found. Exiting");
+    return;
+  }
 }
 
-async function getVenueUrl(filter= "fillmore-silver-spring" ){
-    const fillmoreURl = _.filter(venues, (venue) => { 
-        return venue.includes(filter); 
-    })[0];
-
-    return fillmoreURl;
-}
-
-async function dumpContentToFile(fileName: string, content: string){
-    console.log("Dumping content to file");
-
-    if(!fs.existsSync("./dump")){
-        fs.mkdirSync("./dump");
-    }
-
-    fs.writeFile(`./dump/${fileName}-dump`, content, function(err) {
-        if(err) {
-            return console.log(err);
-        }
-    
-        console.log("The file was saved!");
-    });
-}
-
-
-execute().then(() => {
+execute()
+  .then(() => {
     console.log("done");
-}).catch((error) => {
+  })
+  .catch((error) => {
     console.log(error);
-});
+  });
