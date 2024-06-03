@@ -1,6 +1,6 @@
 import fs from 'fs';
-import inquirer from 'inquirer';
 import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 export async function dumpObjectToFile(fileName: string, object: any){
     console.log("Dumping content to file");
