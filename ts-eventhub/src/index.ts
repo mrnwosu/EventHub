@@ -8,19 +8,10 @@ import {
   writeInfo,
 } from "./utils/utils";
 import { VenueData } from "./models/venueData";
-
-interface RunSignature {
-  searchByName: boolean;
-  searchByZipcode: boolean;
-  venueSearchTerm: string;
-  selectedVenue: VenueData;
-  collectAllEvents: boolean;
-  collectEventsByName: boolean;
-  eventSearchTerm: string;
-}
+import { RunSignature } from "./models/RunSignature";
 
 async function execute() {
-  let signature: RunSignature;
+  let signature = new RunSignature();
 
   const searchResponse = await selectPrompt(
     "How would you like to select your Venue",
@@ -60,6 +51,7 @@ async function execute() {
   );
 
   signature.selectedVenue = VenueService.GetVenueDataById(selectedVenue);
+  writeInfo(`Selected venue: ${JSON.stringify(signature.selectedVenue)}`);
 
   const collectEventResponse = await selectPrompt(
     "How would you like to collect events for this venue?",
@@ -76,7 +68,7 @@ async function execute() {
   if (signature.collectEventsByName) {
     signature.eventSearchTerm = await inputPrompt(
       "Enter the name of the event"
-    );
+    );  
   }
 
   const events = signature.collectAllEvents
@@ -90,7 +82,6 @@ async function execute() {
     writeError("No events found. Exiting");
     return;
   }
-
 }
 
 execute()

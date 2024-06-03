@@ -4,6 +4,7 @@ import { MusicEvent } from "../models/musicEventModels";
 import cheerio from "cheerio";
 import axios from "axios";
 import { VenueData } from "../models/venueData";
+import { writeInfo } from "../utils/utils";
 
 export class VenueService{
     public static getVenueUrl(filter: string){
@@ -70,12 +71,17 @@ export class VenueService{
         return this.GetAllEventDataForVenue(venueData);
     }
 
+    public static GetEventDataForVenue(venue: VenueData){
+        return this.GetAllEventDataForVenue(venue);
+    }
+
     public static GetEventDataForVenueByZipcode(zipcode: string){
         const venueData = this.GetVenueDataByZipcode(zipcode);
         return this.GetAllEventDataForVenue(venueData);
     }
 
     public static async GetAllEventDataForVenue(venueData: VenueData){
+        writeInfo(`Collecting events for ${venueData.name}`);
         const response = await axios.get(venueData.url);
         const $ = cheerio.load(response.data);
         

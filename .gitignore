@@ -1,5 +1,4 @@
 /scripts/**/*.json
-/data/*.json
 *.csv
 /scripts/venv
 /api/node_modules
