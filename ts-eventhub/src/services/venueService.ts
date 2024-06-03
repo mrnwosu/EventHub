@@ -36,6 +36,14 @@ export class VenueService{
         }));
     }
 
+    public static GetVenuesDataByName(name: string){
+        return _.filter(venueData, (venue: VenueData) => { 
+            if(venue.name){
+                return venue.name.toLowerCase().includes(name.toLowerCase()); 
+            }
+        });
+    }
+
     public static GetVenueDataByZipcode(name: string){
         return _.first(_.filter(venueData, (venue: VenueData) => { 
             if(venue.zipcode){
@@ -44,22 +52,30 @@ export class VenueService{
         }));
     }
 
+    public static GetVenuesDataByZipcode(name: string){
+        return _.filter(venueData, (venue: VenueData) => { 
+            if(venue.zipcode){
+                return venue.zipcode === name; 
+            }
+        });
+    }
+
     public static GetEventDataForVenueById(venueId: string){
         const venueData = this.GetVenueDataById(venueId);
-        return this.GetEventDataForVenue(venueData);
+        return this.GetAllEventDataForVenue(venueData);
     }
 
     public static GetEventDataForVenueByName(venueName: string){
         const venueData = this.GetVenueDataByName(venueName);
-        return this.GetEventDataForVenue(venueData);
+        return this.GetAllEventDataForVenue(venueData);
     }
 
     public static GetEventDataForVenueByZipcode(zipcode: string){
         const venueData = this.GetVenueDataByZipcode(zipcode);
-        return this.GetEventDataForVenue(venueData);
+        return this.GetAllEventDataForVenue(venueData);
     }
-s
-    public static async GetEventDataForVenue(venueData: VenueData){
+
+    public static async GetAllEventDataForVenue(venueData: VenueData){
         const response = await axios.get(venueData.url);
         const $ = cheerio.load(response.data);
         
@@ -73,6 +89,15 @@ s
         });
 
         return eventList;
+    }
+
+    public static GetEventDataThmSearchByName(venueData: VenueData, eventName: string){
+        const eventList = this.GetAllEventDataForVenue(venueData);
+        return _.filter(eventList, (event: MusicEvent) => {
+            if(event.name){
+                return event.name.toLowerCase().includes(eventName.toLowerCase());
+            }
+        });
     }
 
     public static SearchVenueByName(name: string){
