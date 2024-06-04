@@ -6,13 +6,29 @@ import {
   selectPrompt,
   writeError,
   writeInfo,
+  writeWarning,
 } from "./utils/utils";
 import { VenueData } from "./models/venueData";
 import { RunSignature } from "./models/RunSignature";
+import { DataService } from "./services/configurationService";
 
 async function execute() {
-  let signature = new RunSignature();
+  const dataService = new DataService();
 
+  const lastRun = await dataService.getLastRun();
+  if (lastRun) {
+    writeInfo(`Last run: ${lastRun.lastRun}`);
+  }
+
+  await dataService.startRun();
+  const accessToken = await dataService.getAccessToken();
+
+  if (!accessToken) {
+    writeWarning("No access token found. You will need to authenticate first. In order to add events to your calendar.");
+  }
+
+
+  let signature = new RunSignature();
   const searchResponse = await selectPrompt(
     "How would you like to select your Venue",
     [
@@ -68,7 +84,7 @@ async function execute() {
   if (signature.collectEventsByName) {
     signature.eventSearchTerm = await inputPrompt(
       "Enter the name of the event"
-    );  
+    );
   }
 
   const events = signature.collectAllEvents
