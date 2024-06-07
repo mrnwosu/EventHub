@@ -47,7 +47,7 @@ export async function inputPrompt(message: string, defaultValue: string = ""){
         message,
         default: defaultValue
     })
-    return input
+    return (input as string).trim();
 }
 
 export async function passwordPrompt(message: string, defaultValue: string = ""){

@@ -19,55 +19,23 @@ async function execute() {
   if (lastRun) {
     writeInfo(`Last run: ${lastRun.lastRun}`);
   }
+  else {
+    writeWarning("No previous runs found. Starting new run");
+    dataService.initRun();
+  }
 
   await dataService.startRun();
   const accessToken = await dataService.getAccessToken();
 
   if (!accessToken) {
-    writeWarning("No access token found. You will need to authenticate first. In order to add events to your calendar.");
+    writeWarning(
+      "No access token found. You will need to authenticate first. In order to add events to your calendar."
+    );
   }
-
 
   let signature = new RunSignature();
-  const searchResponse = await selectPrompt(
-    "How would you like to select your Venue",
-    [
-      { name: "Search by name", value: "searchByName" },
-      { name: "Search by zipcode", value: "searchByZipcode" },
-    ]
-  );
-
-  signature.searchByName = searchResponse === "searchByName";
-  signature.searchByZipcode = searchResponse === "searchByZipcode";
-
-  const searchPrompt = signature.searchByName
-    ? "Enter the name of the venue"
-    : "Enter the zipcode of the venue";
-  signature.venueSearchTerm = await inputPrompt(searchPrompt);
-
-  let venueResults: VenueData[] = [];
-
-  if (signature.searchByName) {
-    venueResults.push(
-      ...VenueService.GetVenuesDataByName(signature.venueSearchTerm)
-    );
-    console.log(venueResults);
-  } else {
-    venueResults.push(
-      ...VenueService.GetVenuesDataByZipcode(signature.venueSearchTerm)
-    );
-    console.log(venueResults);
-  }
-
-  const selectedVenue = await selectPrompt(
-    "Select a venue",
-    venueResults.map((venue: VenueData) => {
-      return { name: venue.name, value: venue.id };
-    })
-  );
-
-  signature.selectedVenue = VenueService.GetVenueDataById(selectedVenue);
-  writeInfo(`Selected venue: ${JSON.stringify(signature.selectedVenue)}`);
+  await selectVenue(signature, lastRun, dataService);
+  await dataService.setPreviousSelectedVenue(signature.selectedVenue.id);
 
   const collectEventResponse = await selectPrompt(
     "How would you like to collect events for this venue?",
@@ -97,6 +65,78 @@ async function execute() {
   if (!events) {
     writeError("No events found. Exiting");
     return;
+  }
+}
+
+// Move to app service
+async function selectVenue(
+  signature: RunSignature,
+  lastRun: any,
+  dataService: DataService
+) {
+
+  if (lastRun?.previousSelectedVenue) {
+    var previous = VenueService.GetVenueDataById(lastRun.previousSelectedVenue);
+    const usePreviousConfirm = await confirmPrompt(
+      `Would you like to use \"${previous.name}\"`
+    );
+
+    if (usePreviousConfirm) {
+      signature.selectedVenue = previous;
+      writeInfo(
+        `Using previous selected venue: ${previous.name}`
+      );
+      return;
+    }
+
+    const clearPreviousConfirm = await confirmPrompt(
+      "Would you like to clear the previous selected venue?"
+    );
+
+    if (clearPreviousConfirm) {
+      dataService.clearPreviousSelectedVenue();
+    }
+  } else {
+    const searchResponse = await selectPrompt(
+      "How would you like to select your Venue",
+      [
+        { name: "Search by name", value: "searchByName" },
+        { name: "Search by zipcode", value: "searchByZipcode" },
+      ]
+    );
+
+    signature.searchByName = searchResponse === "searchByName";
+    signature.searchByZipcode = searchResponse === "searchByZipcode";
+
+    const searchPrompt = signature.searchByName
+      ? "Enter the name of the venue"
+      : "Enter the zipcode of the venue";
+
+    signature.venueSearchTerm = await inputPrompt(searchPrompt);
+
+    let venueResults: VenueData[] = [];
+
+    if (signature.searchByName) {
+      venueResults.push(
+        ...VenueService.GetVenuesDataByName(signature.venueSearchTerm)
+      );
+      console.log(venueResults);
+    } else {
+      venueResults.push(
+        ...VenueService.GetVenuesDataByZipcode(signature.venueSearchTerm)
+      );
+      console.log(venueResults);
+    }
+
+    const selectedVenue = await selectPrompt(
+      "Select a venue",
+      venueResults.map((venue: VenueData) => {
+        return { name: venue.name, value: venue.id };
+      })
+    );
+
+    signature.selectedVenue = VenueService.GetVenueDataById(selectedVenue);
+    writeInfo(`Selected venue: ${JSON.stringify(signature.selectedVenue)}`);
   }
 }
 
