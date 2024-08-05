@@ -19,7 +19,9 @@
     "cheerio": "^1.0.0-rc.12",
     "inquirer": "^8.0.0",
     "lodash": "^4.17.21",
+    "open": "^10.1.0",
     "prisma": "^5.14.0",
+    "ts-eventhub": "file:",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }

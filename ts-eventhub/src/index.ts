@@ -11,6 +11,7 @@ import {
 import { VenueData } from "./models/venueData";
 import { RunSignature } from "./models/RunSignature";
 import { DataService } from "./services/configurationService";
+import open from "open";
 
 async function execute() {
   const dataService = new DataService();
@@ -31,6 +32,7 @@ async function execute() {
     writeWarning(
       "No access token found. You will need to authenticate first. In order to add events to your calendar."
     );
+    open("https://www.google.com");
   }
 
   let signature = new RunSignature();
